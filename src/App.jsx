@@ -5,14 +5,17 @@ import NecesidadSection from './components/charts/NecesidadSection'
 import MotivosSection from './components/charts/MotivosSection'
 import SentimientoSection from './components/charts/SentimientoSection'
 import Uploader from './components/Uploader'
+import LoginForm from './components/LoginForm'
 import { useFilters } from './hooks/useFilters'
 import { useInteracciones } from './hooks/useInteracciones'
 import { useDarkMode } from './hooks/useDarkMode'
+import { useAuth } from './hooks/useAuth'
 import { exportDashboardPdf } from './utils/exportPdf'
 
 export default function App() {
   const [tab, setTab] = useState('dashboard')
   const [dark, toggleDark] = useDarkMode()
+  const { session, loading: authLoading, signIn, signOut } = useAuth()
   const filters = useFilters()
   const { data, loading, error } = useInteracciones(filters)
 
@@ -77,10 +80,27 @@ export default function App() {
 
       <main className="max-w-screen-2xl mx-auto px-4 py-6">
         {tab === 'uploader' && (
-          <div>
-            <SectionTitle>Cargar reporte mensual</SectionTitle>
-            <Uploader />
-          </div>
+          authLoading ? null : !session ? (
+            <LoginForm onLogin={signIn} />
+          ) : (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <SectionTitle>Cargar reporte mensual</SectionTitle>
+                <div className="flex items-center gap-2 pb-3">
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                    {session.user.email}
+                  </span>
+                  <button
+                    onClick={signOut}
+                    className="text-xs text-gray-400 hover:text-red-500 dark:hover:text-red-400 underline transition-colors"
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              </div>
+              <Uploader />
+            </div>
+          )
         )}
 
         {tab === 'dashboard' && (
