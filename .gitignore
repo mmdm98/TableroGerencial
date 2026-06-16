@@ -1,0 +1,31 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime data
+node_modules
+dist
+dist-ssr
+*.local
+
+# Env
+.env
+.env.local
+
+# Claude Code session data
+.claude/
+
+# Sample data (may contain sensitive real interactions)
+Ejemplos de carga/
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
