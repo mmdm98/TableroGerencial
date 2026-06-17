@@ -117,7 +117,58 @@ export function getSentimientoLineData(data) {
   }
 }
 
-const FASES_ORDEN = ['Negativo', 'Neutro', 'Positivo']
+const FASES_SENTIMIENTO = ['Negativo', 'Neutro', 'Positivo', 'No Medido']
+
+function buildMatriz() {
+  const m = {}
+  FASES_SENTIMIENTO.forEach(a => {
+    m[a] = {}
+    FASES_SENTIMIENTO.forEach(b => { m[a][b] = 0 })
+  })
+  return m
+}
+
+export function getSankeyData(data) {
+  const matrizA = buildMatriz() // inicio → desarrollo
+  const matrizB = buildMatriz() // desarrollo → cierre
+
+  data.forEach(r => {
+    const fi = r.fase_inicio
+    const fd = r.fase_desarrollo
+    const fc = r.fase_cierre
+
+    if (fi && fd && matrizA[fi]?.[fd] !== undefined) matrizA[fi][fd]++
+    if (fd && fc && matrizB[fd]?.[fc] !== undefined) matrizB[fd][fc]++
+  })
+
+  const links = []
+
+  // Grupo A: Inicio → Desarrollo
+  FASES_SENTIMIENTO.forEach(fi => {
+    FASES_SENTIMIENTO.forEach(fd => {
+      const value = matrizA[fi][fd]
+      if (value > 0) links.push({ source: `Inicio: ${fi}`, target: `Desarrollo: ${fd}`, value })
+    })
+  })
+
+  // Grupo B: Desarrollo → Cierre
+  FASES_SENTIMIENTO.forEach(fd => {
+    FASES_SENTIMIENTO.forEach(fc => {
+      const value = matrizB[fd][fc]
+      if (value > 0) links.push({ source: `Desarrollo: ${fd}`, target: `Cierre: ${fc}`, value })
+    })
+  })
+
+  // Solo incluir nodos que aparecen en algún link
+  const usedIds = new Set(links.flatMap(l => [l.source, l.target]))
+  const nodes = [
+    ...FASES_SENTIMIENTO.map(f => ({ id: `Inicio: ${f}` })),
+    ...FASES_SENTIMIENTO.map(f => ({ id: `Desarrollo: ${f}` })),
+    ...FASES_SENTIMIENTO.map(f => ({ id: `Cierre: ${f}` })),
+  ].filter(n => usedIds.has(n.id))
+
+  return { nodes, links }
+}
 
 export function getHeatmapData(data) {
   const matrix = {}

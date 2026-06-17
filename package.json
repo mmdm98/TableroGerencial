@@ -12,6 +12,7 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@nivo/sankey": "^0.99.0",
     "@supabase/supabase-js": "^2.49.8",
     "apexcharts": "^4.7.0",
     "html2canvas": "^1.4.1",

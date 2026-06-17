@@ -4,6 +4,7 @@ import KpiCards from './components/KpiCards'
 import NecesidadSection from './components/charts/NecesidadSection'
 import MotivosSection from './components/charts/MotivosSection'
 import SentimientoSection from './components/charts/SentimientoSection'
+import ComparacionTab from './components/ComparacionTab'
 import Uploader from './components/Uploader'
 import LoginForm from './components/LoginForm'
 import { useFilters } from './hooks/useFilters'
@@ -79,6 +80,10 @@ export default function App() {
       />
 
       <main className="max-w-screen-2xl mx-auto px-4 py-6">
+        {tab === 'comparar' && (
+          <ComparacionTab dark={dark} />
+        )}
+
         {tab === 'uploader' && (
           authLoading ? null : !session ? (
             <LoginForm onLogin={signIn} />

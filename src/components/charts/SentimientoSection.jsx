@@ -1,9 +1,10 @@
 import ReactApexChart from 'react-apexcharts'
+import { ResponsiveSankey } from '@nivo/sankey'
 import ChartCard from '../ChartCard'
 import {
   getSentimientoDistribucion,
   getSentimientoLineData,
-  getHeatmapData,
+  getSankeyData,
 } from '../../utils/chartData'
 import { SENTIMENT_COLORS } from '../../utils/palette'
 
@@ -23,10 +24,10 @@ function baseOpts(dark) {
 }
 
 const COLOR_MAP = {
-  Positivo:    { hex: SENTIMENT_COLORS.Positivo,    text: 'text-emerald-700 dark:text-emerald-400', light: 'bg-emerald-50 dark:bg-emerald-900/30' },
-  Neutro:      { hex: SENTIMENT_COLORS.Neutro,      text: 'text-gray-600 dark:text-gray-300',       light: 'bg-gray-100 dark:bg-gray-700/50'      },
-  Negativo:    { hex: SENTIMENT_COLORS.Negativo,    text: 'text-red-700 dark:text-red-400',         light: 'bg-red-50 dark:bg-red-900/30'         },
-  'No Medido': { hex: SENTIMENT_COLORS['No Medido'], text: 'text-slate-500 dark:text-slate-400',    light: 'bg-slate-50 dark:bg-slate-700/50'     },
+  Positivo:    { hex: SENTIMENT_COLORS.Positivo,     text: 'text-emerald-700 dark:text-emerald-400', light: 'bg-emerald-50 dark:bg-emerald-900/30' },
+  Neutro:      { hex: SENTIMENT_COLORS.Neutro,       text: 'text-gray-600 dark:text-gray-300',       light: 'bg-gray-100 dark:bg-gray-700/50'      },
+  Negativo:    { hex: SENTIMENT_COLORS.Negativo,     text: 'text-red-700 dark:text-red-400',         light: 'bg-red-50 dark:bg-red-900/30'         },
+  'No Medido': { hex: SENTIMENT_COLORS['No Medido'], text: 'text-slate-500 dark:text-slate-400',     light: 'bg-slate-50 dark:bg-slate-700/50'     },
 }
 
 function BarraApilada({ distribucion }) {
@@ -40,7 +41,6 @@ function BarraApilada({ distribucion }) {
 
   return (
     <div className="space-y-3">
-      {/* Barra visual */}
       <div className="flex w-full h-10 rounded-lg overflow-hidden">
         {distribucion.map(({ label, pct }) =>
           pct > 0 ? (
@@ -58,7 +58,6 @@ function BarraApilada({ distribucion }) {
         )}
       </div>
 
-      {/* Leyenda con detalle */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {distribucion.map(({ label, count, pct }) => {
           const c = COLOR_MAP[label] ?? COLOR_MAP['No Medido']
@@ -78,10 +77,40 @@ function BarraApilada({ distribucion }) {
   )
 }
 
+function SankeyLinkTooltip({ link }) {
+  const isDark = document.documentElement.classList.contains('dark')
+  const [sourcePrefix, sourceName] = link.source.id.split(': ')
+  const targetName = link.target.id.split(': ')[1]
+  // Use sourceLinks sum (outgoing) for % — correct for both source and intermediate nodes
+  const sourceOutgoing = link.source.sourceLinks?.reduce((s, l) => s + l.value, 0) ?? link.source.value
+  const pct = sourceOutgoing > 0 ? ((link.value / sourceOutgoing) * 100).toFixed(1) : '0.0'
+  const etapaLabel = sourcePrefix === 'Inicio' ? 'inicio' : 'desarrollo'
+  return (
+    <div style={{
+      background: isDark ? '#1f2937' : '#ffffff',
+      color: isDark ? '#f3f4f6' : '#1f2937',
+      padding: '8px 12px',
+      borderRadius: '8px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+      fontSize: '12px',
+      lineHeight: 1.7,
+      border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
+      whiteSpace: 'nowrap',
+    }}>
+      <div style={{ fontWeight: 600, marginBottom: 2 }}>
+        {sourceName} → {targetName}
+      </div>
+      <div style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>
+        {link.value.toLocaleString('es-AR')} llamadas · {pct}% del {etapaLabel} {sourceName}
+      </div>
+    </div>
+  )
+}
+
 export default function SentimientoSection({ data, dark }) {
   const distribucion = getSentimientoDistribucion(data)
   const { series: seriesLinea, categories } = getSentimientoLineData(data)
-  const seriesHeatmap = getHeatmapData(data)
+  const sankeyData = getSankeyData(data)
 
   const base = baseOpts(dark)
 
@@ -106,33 +135,7 @@ export default function SentimientoSection({ data, dark }) {
     legend: { show: false },
   }
 
-  const heatmapOpts = {
-    ...base,
-    chart: { ...base.chart, type: 'heatmap' },
-    dataLabels: {
-      enabled: true,
-      formatter: v => (v > 0 ? v + '%' : ''),
-      style: { fontSize: '12px', fontWeight: '600', colors: [dark ? '#f9fafb' : '#1f2937'] },
-    },
-    plotOptions: {
-      heatmap: {
-        shadeIntensity: 0.6,
-        radius: 4,
-        colorScale: {
-          ranges: [
-            { from: 0,  to: 0,  color: dark ? '#1f2937' : '#f9fafb', name: '0%' },
-            { from: 1,  to: 10, color: '#bfdbfe', name: '1–10%' },
-            { from: 11, to: 25, color: '#60a5fa', name: '11–25%' },
-            { from: 26, to: 50, color: '#2563eb', name: '26–50%' },
-            { from: 51, to: 100, color: '#1e3a8a', name: '>50%' },
-          ],
-        },
-      },
-    },
-    xaxis: { labels: { style: { fontSize: '11px' } } },
-    yaxis: { labels: { style: { fontSize: '11px' } } },
-    tooltip: { ...base.tooltip, y: { formatter: v => v + '% de las interacciones' } },
-  }
+  const labelFill = dark ? '#9ca3af' : '#374151'
 
   return (
     <div className="space-y-4">
@@ -152,10 +155,50 @@ export default function SentimientoSection({ data, dark }) {
         </ChartCard>
 
         <ChartCard
-          title="Mapa de Mutación de Sentimiento"
-          subtitle="De estado al Inicio → estado al Cierre (% del total con dato)"
+          title="Transición de Sentimiento"
+          subtitle="Flujo del estado al Inicio → Desarrollo → Cierre de la llamada"
         >
-          <ReactApexChart type="heatmap" series={seriesHeatmap} options={heatmapOpts} height={280} />
+          {sankeyData.links.length > 0 ? (
+            <div style={{ height: 320 }}>
+              <ResponsiveSankey
+                data={sankeyData}
+                margin={{ top: 8, right: 110, bottom: 8, left: 110 }}
+                align="justify"
+                colors={(node) => SENTIMENT_COLORS[node.id.split(': ')[1]] ?? '#9ca3af'}
+                nodeOpacity={1}
+                nodeThickness={20}
+                nodeInnerPadding={3}
+                nodeSpacing={20}
+                nodeBorderWidth={0}
+                linkOpacity={0.4}
+                linkHoverOpacity={0.75}
+                linkHoverOthersOpacity={0.1}
+                enableLinkGradient={true}
+                enableLabels={true}
+                label={(node) => node.id.split(': ')[1]}
+                labelPosition="outside"
+                labelOrientation="horizontal"
+                labelPadding={14}
+                labelTextColor={labelFill}
+                animate={false}
+                isInteractive={true}
+                linkTooltip={SankeyLinkTooltip}
+                theme={{
+                  labels: { text: { fontSize: 11, fill: labelFill } },
+                  tooltip: {
+                    container: {
+                      background: dark ? '#1f2937' : '#ffffff',
+                      color: dark ? '#f3f4f6' : '#1f2937',
+                    },
+                  },
+                }}
+              />
+            </div>
+          ) : (
+            <div className="flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm" style={{ height: 320 }}>
+              Sin datos de transición para el período seleccionado
+            </div>
+          )}
         </ChartCard>
       </div>
     </div>

@@ -44,6 +44,7 @@ export function mapearFila(raw) {
     sentimiento_cliente_score: score,
     sentimiento_categoria:     mapSentimientoScore(score),
     fase_inicio:               limpiarStr(raw['Inicio']),
+    fase_desarrollo:           limpiarStr(raw['Desarrollo']),
     fase_cierre:               limpiarStr(raw['Cierre']),
   }
 }

@@ -45,6 +45,7 @@ export default function FilterBar({
   }, [])
 
   const isDashboard = tab === 'dashboard'
+  const isComparar = tab === 'comparar'
   const hayFiltrosActivos = agentes.length > 0 || necesidades.length > 0
 
   return (
@@ -64,7 +65,8 @@ export default function FilterBar({
         {/* Tabs */}
         <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
           <TabBtn active={isDashboard} onClick={() => setTab('dashboard')}>Dashboard</TabBtn>
-          <TabBtn active={!isDashboard} onClick={() => setTab('uploader')}>Cargar Datos</TabBtn>
+          <TabBtn active={isComparar} onClick={() => setTab('comparar')}>Comparar</TabBtn>
+          <TabBtn active={tab === 'uploader'} onClick={() => setTab('uploader')}>Cargar Datos</TabBtn>
         </div>
 
         {/* Filtros */}
