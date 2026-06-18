@@ -5,6 +5,7 @@ import {
   getSentimientoDistribucion,
   getSentimientoLineData,
   getSankeyData,
+  labelFechaConDia,
 } from '../../utils/chartData'
 import { SENTIMENT_COLORS } from '../../utils/palette'
 
@@ -123,7 +124,7 @@ export default function SentimientoSection({ data, dark }) {
     markers: { size: categories.length <= 7 ? 4 : 0, colors: [SENTIMENT_COLORS.Positivo] },
     xaxis: {
       categories,
-      labels: { rotate: -45, style: { fontSize: '10px' } },
+      labels: { rotate: 0, formatter: labelFechaConDia, style: { fontSize: '10px' } },
       tickAmount: Math.min(categories.length, 15),
     },
     yaxis: {

@@ -1,3 +1,15 @@
+// ─── Formato de fechas en ejes ───────────────────────────────────────────────
+
+const DIAS = ['D', 'L', 'MA', 'MI', 'J', 'V', 'SA']
+
+export function labelFechaConDia(iso) {
+  const d = new Date(iso + 'T12:00:00')
+  if (isNaN(d)) return iso
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  return [`${dd}/${mm}`, DIAS[d.getDay()]]
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function contarPorClave(arr, key, fallback = 'Sin Clasificar') {
@@ -59,6 +71,34 @@ export function getMotivosPieData(data) {
   const counts = contarPorClave(data, 'motivo_necesidad', 'Sin Motivo')
   const labels = Object.keys(counts).sort()
   return { series: labels.map(l => counts[l]), labels }
+}
+
+export function getMotivosVelocidadData(data, umbral = 20) {
+  const byDate = agruparPorFecha(data, 'motivo_necesidad', 'Sin Motivo')
+  const dates = Object.keys(byDate).sort()
+  if (dates.length < 2) return { series: [], categories: [] }
+
+  const allMotivos = [...new Set(data.map(r => r.motivo_necesidad ?? 'Sin Motivo'))].sort()
+
+  const deltasByMotivo = {}
+  allMotivos.forEach(m => {
+    deltasByMotivo[m] = dates.slice(1).map((d, i) => {
+      const prev = byDate[dates[i]][m] || 0
+      const curr = byDate[d][m] || 0
+      return curr - prev
+    })
+  })
+
+  const filteredMotivos = allMotivos.filter(m =>
+    deltasByMotivo[m].some(delta => Math.abs(delta) > umbral)
+  )
+
+  const series = filteredMotivos.map(m => ({
+    name: m,
+    data: deltasByMotivo[m],
+  }))
+
+  return { series, categories: dates.slice(1) }
 }
 
 export function getTop5Justificaciones(data) {

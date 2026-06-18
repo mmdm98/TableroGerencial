@@ -1,6 +1,6 @@
 import ReactApexChart from 'react-apexcharts'
 import ChartCard from '../ChartCard'
-import { getMotivosLineData, getMotivosPieData, getTop5Justificaciones } from '../../utils/chartData'
+import { getMotivosLineData, getMotivosPieData, getTop5Justificaciones, getMotivosVelocidadData, labelFechaConDia } from '../../utils/chartData'
 import { PALETTE } from '../../utils/palette'
 
 function baseOpts(dark) {
@@ -60,7 +60,7 @@ export default function MotivosSection({ data, dark, selectedMotivo, onSelectMot
     markers: { size: categories.length <= 7 ? 3 : 0 },
     xaxis: {
       categories,
-      labels: { rotate: -45, style: { fontSize: '10px' } },
+      labels: { rotate: 0, formatter: labelFechaConDia, style: { fontSize: '10px' } },
       tickAmount: Math.min(categories.length, 15),
     },
     yaxis: {
@@ -94,6 +94,37 @@ export default function MotivosSection({ data, dark, selectedMotivo, onSelectMot
     tooltip: { ...base.tooltip, y: { formatter: v => `${v} interacciones` } },
     dataLabels: { formatter: v => v.toFixed(1) + '%' },
     plotOptions: { pie: { donut: { size: '60%' } } },
+  }
+
+  const { series: seriesVel, categories: catVel } = getMotivosVelocidadData(data)
+  const velColors = seriesVel.map(s => catColors[s.name] ?? PALETTE[0])
+
+  const velocidadOpts = {
+    ...base,
+    chart: { ...base.chart, type: 'bar' },
+    colors: velColors,
+    plotOptions: {
+      bar: { horizontal: false, borderRadius: 2, columnWidth: '70%' },
+    },
+    dataLabels: { enabled: false },
+    xaxis: {
+      categories: catVel,
+      labels: { rotate: 0, formatter: labelFechaConDia, style: { fontSize: '10px' } },
+      tickAmount: Math.min(catVel.length, 15),
+    },
+    yaxis: {
+      labels: { formatter: v => Math.round(v).toLocaleString('es-AR'), style: { fontSize: '11px' } },
+    },
+    tooltip: {
+      ...base.tooltip,
+      y: { formatter: v => `${v > 0 ? '+' : ''}${Math.round(v).toLocaleString('es-AR')} interacciones` },
+    },
+    legend: {
+      position: 'top',
+      fontSize: '11px',
+      itemMargin: { horizontal: 8 },
+      onItemClick: { toggleDataSeries: false },
+    },
   }
 
   // Per-bar colors: highlight selected, dim others
@@ -178,6 +209,22 @@ export default function MotivosSection({ data, dark, selectedMotivo, onSelectMot
           key={`mot-bar-${selectedMotivo ?? 'all'}-${selectedJustificacion ?? 'all'}-${dark}`}
           type="bar" series={seriesBar} options={barOpts} height={240}
         />
+      </ChartCard>
+
+      <ChartCard
+        title="Variación Diaria por Motivo"
+        subtitle="Cambio en volumen respecto al día anterior · umbral mínimo: ±20 interacciones"
+      >
+        {seriesVel.length > 0 ? (
+          <ReactApexChart
+            key={`mot-vel-${dark}`}
+            type="bar" series={seriesVel} options={velocidadOpts} height={280}
+          />
+        ) : (
+          <div className="flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm" style={{ height: 280 }}>
+            Ningún motivo supera el umbral de ±20 interacciones diarias
+          </div>
+        )}
       </ChartCard>
     </div>
   )

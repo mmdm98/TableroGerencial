@@ -1,6 +1,6 @@
 import ReactApexChart from 'react-apexcharts'
 import ChartCard from '../ChartCard'
-import { getNecesidadLineData, getNecesidadPieData } from '../../utils/chartData'
+import { getNecesidadLineData, getNecesidadPieData, labelFechaConDia } from '../../utils/chartData'
 import { PALETTE } from '../../utils/palette'
 
 function baseOpts(dark) {
@@ -54,7 +54,7 @@ export default function NecesidadSection({ data, dark, selectedNecesidad, onSele
     markers: { size: categories.length <= 7 ? 4 : 0 },
     xaxis: {
       categories,
-      labels: { rotate: -45, style: { fontSize: '10px' } },
+      labels: { rotate: 0, formatter: labelFechaConDia, style: { fontSize: '10px' } },
       tickAmount: Math.min(categories.length, 15),
     },
     yaxis: {
