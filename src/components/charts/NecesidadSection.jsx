@@ -58,10 +58,10 @@ export default function NecesidadSection({ data, dark, selectedNecesidad, onSele
       tickAmount: Math.min(categories.length, 15),
     },
     yaxis: {
-      min: 0, max: 100,
-      labels: { formatter: v => v + '%', style: { fontSize: '11px' } },
+      min: 0,
+      labels: { formatter: v => Math.round(v).toLocaleString('es-AR'), style: { fontSize: '11px' } },
     },
-    tooltip: { ...base.tooltip, y: { formatter: v => v + '%' } },
+    tooltip: { ...base.tooltip, y: { formatter: v => `${Math.round(v).toLocaleString('es-AR')} interacciones` } },
     legend: {
       position: 'top',
       fontSize: '12px',

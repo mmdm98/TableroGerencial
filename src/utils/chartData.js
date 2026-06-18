@@ -20,11 +20,12 @@ function agruparPorFecha(data, key, fallback = 'Sin Clasificar') {
   return byDate
 }
 
-function buildLineaSeries(byDate, claves) {
+function buildLineaSeries(byDate, claves, modo = 'pct') {
   const dates = Object.keys(byDate).sort()
   const series = claves.map(k => ({
     name: k,
     data: dates.map(d => {
+      if (modo === 'vol') return byDate[d][k] || 0
       const total = Object.values(byDate[d]).reduce((a, b) => a + b, 0)
       return total > 0 ? +((byDate[d][k] || 0) / total * 100).toFixed(1) : 0
     }),
@@ -37,7 +38,7 @@ function buildLineaSeries(byDate, claves) {
 export function getNecesidadLineData(data) {
   const byDate = agruparPorFecha(data, 'necesidad', 'Sin Clasificar')
   const claves = [...new Set(data.map(r => r.necesidad ?? 'Sin Clasificar'))].sort()
-  return buildLineaSeries(byDate, claves)
+  return buildLineaSeries(byDate, claves, 'vol')
 }
 
 export function getNecesidadPieData(data) {
@@ -51,7 +52,7 @@ export function getNecesidadPieData(data) {
 export function getMotivosLineData(data) {
   const byDate = agruparPorFecha(data, 'motivo_necesidad', 'Sin Motivo')
   const claves = [...new Set(data.map(r => r.motivo_necesidad ?? 'Sin Motivo'))].sort()
-  return buildLineaSeries(byDate, claves)
+  return buildLineaSeries(byDate, claves, 'vol')
 }
 
 export function getMotivosPieData(data) {
